@@ -10,31 +10,46 @@ import jwt
 import datetime
 from django.conf import settings
 from extensions.auth import JWTQueryParamsAuthentication
+from servers.bc import BCServer
 
 class RegisterView(APIView):
-    authentication_classes = []
+    authentication_classes = ()
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
-        password2 = request.data.get('password2')
-        if Users.objects.filter(username=username):
+        email = request.data.get('email')
+        address = request.data.get('address')
+        bc_customers = BCServer()
+        if Users.objects.filter(email=email):
             return Response({'msg': '该用户已注册！', 'code': 400})
         else:
-            if password == password2:
-                user_data = {'username': username, 'password': make_password(password)}
-                user_serializer = RegisterSerializers(data=user_data)
-                if user_serializer.is_valid():
-                    user_serializer.save()
-                    return Response({'msg': '注册成功！', 'code': 200})
-                else:
-                    return Response({'msg': user_serializer.errors, 'code': 400})
-            else:
-                return Response({'msg': '两次密码不一致！', 'code': 400})
-
+            user = {'username': username, 'password': make_password(password),'email':email,'address':address}
+            data = bc_customers.create_customer(user=user)
+            if data is False:
+                return Response({
+                    'code':400,
+                    'message':'用户创建失败'
+                })
+            user = Users.objects.create(username=username,password=password,email=email,address=address)
+            return Response(
+                {
+                    'code':200,
+                    'message':"用户创建成功",
+                    'data':{
+                        'id':user.id
+                    }
+                }
+            )
+            # user_serializer = RegisterSerializers(data=user_data)
+            # if user_serializer.is_valid():
+            #     user_serializer.save()
+            #     return Response({'msg': '注册成功！', 'code': 200})
+            # else:
+            #     return Response({'msg': user_serializer.errors, 'code': 400})
 
 
 class LoginView(APIView):
-    authentication_classes = []
+    authentication_classes = ()
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')

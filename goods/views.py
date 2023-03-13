@@ -9,7 +9,7 @@ from extensions.auth import JWTQueryParamsAuthentication
 
 
 class GoodsView(APIView):
-  authentication_classes = []
+  authentication_classes = ()
   def get(self,request):
    goods = Goods.objects.all().values()
    return Response({
@@ -21,7 +21,7 @@ class GoodsView(APIView):
    })
 
 class GoodsDetailView(APIView):
- authentication_classes = []
+ authentication_classes = ()
  def get(self,request,goods_id):
   goods= Goods.objects.filter(pk=goods_id).values()
   return Response({
